@@ -36,8 +36,8 @@ try:
             y_coordinate = player_request[3]
             
             print(f"Player {ingame_players.index(player_address)} shoots player {target_player_index} at ({x_coordinate}, {y_coordinate})")
-            
-            target_player_message = f"{ingame_players.index(player_address)} {player_request[0]} {x_coordinate} {y_coordinate}"
+
+            target_player_message = f"{target_player_index} {player_request[0]} {x_coordinate} {y_coordinate}"
             target_player_address = ingame_players[target_player_index]
             server_socket.sendto(target_player_message.encode(), target_player_address)
 

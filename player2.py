@@ -7,13 +7,19 @@ SERVER_PORT = 50000
 # Create UDP socket
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
+message = input("Join Game: ")
+
+# Send message to server
+client_socket.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
+
 while True:
     # Get user input for message to send
-    message = input("Enter message: ")
-
-    # Send message to server
-    client_socket.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
-
-    # Receive response from server
     response, server_address = client_socket.recvfrom(1024)
-    print(f"Received from server: {response.decode()}")
+    
+    if (response):
+        response = response.decode().split()
+        # Receive response from server
+        print(f"You received a shoot at ({response[2]},{response[3]})")
+        
+        message = input("::")
+        client_socket.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
