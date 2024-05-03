@@ -11,10 +11,10 @@ client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 client_socket.sendto("Ready".encode(), (SERVER_IP, SERVER_PORT)) # Send message to server
 
 time.sleep(0.1)
-shot = input("Player1::")
+shot = input("Player0::")
 client_socket.sendto(shot.encode(), (SERVER_IP, SERVER_PORT))
 
-board = [
+ships = [
 		[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)], # Carrier
 		[(0, 1), (1, 1), (2, 1), (3, 1)], # Battleship
 		[(0, 2), (1, 2), (2, 2)], # Destroyer
@@ -24,12 +24,16 @@ board = [
 		[(0, 6)], # Submarine 1
 	]
 
+""" ships = [
+		[(0, 0)] # Submarine 1
+	] """
+
 while True:
     # Get user input for message to send
     response, server_address = client_socket.recvfrom(1024)
 
     if response:
-        if ships != 0:
+        if not ships:
             response = response.decode().split()
             # Receive response from server
             #print(f"You received a shoot at ({response[2]}, {response[3]})")
@@ -37,7 +41,7 @@ while True:
 
             hit_coordinates = (int(response[2]), int(response[3]))
             # Check if a ship square was hitted
-            for ships in board:
+            for ships in ships:
                 for ship_coordinates in ships:
                     if hit_coordinates == ship_coordinates:
                         attack_report = " Hit"
@@ -59,7 +63,7 @@ while True:
                 break
         else:
             message = "sunk"
-
+            
         client_socket.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
 
 
