@@ -22,7 +22,7 @@ number_of_players = int(input("Number of Players: "))
 # List to store addresses of players currently in the game
 ingame_players = []
 timeof_play = []
-time_since_last_play = []
+player_timeof_play = []
 
 try:
 
@@ -34,14 +34,17 @@ try:
 
     while True:
         # Receive message from player
-        """ after the 'sunk' message is staying here. I think is to wait for another message"""
         data, player_address = server_socket.recvfrom(1024)
         # Checks if it's a new player
         if player_address not in ingame_players:
             ingame_players.append(player_address)
-            print(f"Player {ingame_players.index(player_address)} joined.")
+            player_number = ingame_players.index(player_address)
+            print(f"Player {player_number} joined.")
+            server_socket.sendto(bytes(str(player_number), 'utf-8'), player_address)
             timeof_play.append(time.time())
+
         player_message = data.decode().split()
+        
         if len(player_message) >= 4 and player_message[0] == "shoot":
             target_player_index = int(player_message[1])
             x_coordinate = player_message[2]
@@ -59,15 +62,14 @@ try:
             
             attack_report, player_address = server_socket.recvfrom(1024)
             timeof_play[target_player_index] = time.time()
+            print(timeof_play)
 
-            print(f"{attack_report.decode()}")
-        
-        elif (player_message == "sunk"):
-            for player_index, last_play_time in timeof_play:
-                time_since_last_play[player_index] = time.time() - last_play_time
-            player_with_highest_time = max(time_since_last_play, key=time_since_last_play.get)
-            print(player_with_highest_time)
-            continue
+            if (attack_report.decode() == "sunk"):
+                for last_play_time in timeof_play:
+                    player_timeof_play.append(time.time() - last_play_time)
+                highest_time = max(player_timeof_play)
+                highest_player_timeof_play = player_timeof_play.index(highest_time)
+                player_address = ingame_players[player_timeof_play.index(highest_time)]
 
         response = ""
         server_socket.sendto(response.encode(), player_address)

@@ -10,6 +10,8 @@ client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 # Send message to server
 client_socket.sendto("Ready".encode(), (SERVER_IP, SERVER_PORT)) # Send message to server
+player_number, server_address = client_socket.recvfrom(1024)
+player_number = player_number.decode()
 
 board = [
 		[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)], # Carrier
@@ -19,6 +21,10 @@ board = [
 		[(0, 4), (1, 4)], # Cruiser 2
 		[(0, 5)], # Submarine 1
 		[(0, 6)], # Submarine 1
+	]
+
+ships = [
+		[(0, 0)] # Submarine 1
 	]
 
 while True:
@@ -33,30 +39,32 @@ while True:
 
         hit_coordinates = (int(response[2]), int(response[3]))
         # Check if a ship square was hitted
-        for ships in board:
-            for ship_coordinates in ships:
-                if hit_coordinates == ship_coordinates:
-                    attack_report = " Hit"
-                    hit_flag = True
-                    #print(attack_report)
-                    # Remove the destroyed ship square from the coordinates
-                    ships.remove(hit_coordinates)
-                    break
-                
-        if hit_flag == False:
-            attack_report = " Water"
-            #print(attack_report)
+        if ships:
+            for ships in ships:
+                for ship_coordinates in ships:
+                    if hit_coordinates == ship_coordinates:
+                        attack_report = " Hit"
+                        hit_flag = True
+                        #print(attack_report)
+                        # Remove the destroyed ship square from the coordinates
+                        ships.remove(hit_coordinates)
+                        break
+                    
+            if hit_flag == False:
+                attack_report = " Water"
+                #print(attack_report)
+        else:
+            attack_report = "sunk"
 
         client_socket.sendto(attack_report.encode(), (SERVER_IP, SERVER_PORT))
 
         time.sleep(0.001)
-        message = input("Player1:: ")
+        message = input(f"Player{player_number}:: ")
+
         if message.lower() == 'q':
             break
 
-        # Send message to server to continue the game
         client_socket.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
 
 # Close the client socket
 client_socket.close()
-
