@@ -22,7 +22,6 @@ number_of_players = int(input("Number of Players: "))
 # List to store addresses of players currently in the game
 ingame_players = []
 timeof_play = []
-player_timeof_play = []
 
 try:
 
@@ -30,6 +29,7 @@ try:
     subprocess.Popen(['/usr/bin/python3', 'player1.py'])
 
     for i in range(number_of_players-1):
+        time.sleep(0.01)
         subprocess.Popen(['/usr/bin/python3', 'players.py'])
 
     while True:
@@ -62,16 +62,19 @@ try:
             
             attack_report, player_address = server_socket.recvfrom(1024)
             timeof_play[target_player_index] = time.time()
-            print(timeof_play)
 
             if (attack_report.decode() == "sunk"):
+                player_timeof_play = []
                 for last_play_time in timeof_play:
                     player_timeof_play.append(time.time() - last_play_time)
                 highest_time = max(player_timeof_play)
                 highest_player_timeof_play = player_timeof_play.index(highest_time)
                 player_address = ingame_players[player_timeof_play.index(highest_time)]
+                print(player_timeof_play.index(highest_time))
+                print(player_address)
 
         response = ""
+        print(player_address)
         server_socket.sendto(response.encode(), player_address)
 
 except KeyboardInterrupt:
