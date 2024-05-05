@@ -39,35 +39,43 @@ while True:
         # Receive response from server
         #print(f"You received a shoot at ({response[2]}, {response[3]})")
         hit_flag = False
+        ship_sunk = False
 
         hit_coordinates = (int(response[2]), int(response[3]))
         # Check if a ship square was hitted
-        if ships:
-            for ships in ships:
-                for ship_coordinates in ships:
-                    if hit_coordinates == ship_coordinates:
-                        attack_report = " Hit"
-                        hit_flag = True
-                        #print(attack_report)
-                        # Remove the destroyed ship square from the coordinates
-                        ships.remove(hit_coordinates)
-                        break
-                    
+
+        for ship in ships:
+            for ship_coordinates in ship:
+                if hit_coordinates == ship_coordinates:
+                    attack_report = " Hit"
+                    print("Hit")
+                    hit_flag = True
+                    #print(attack_report)
+                    # Remove the destroyed ship square from the coordinates
+                    ship.remove(hit_coordinates)
+                    if not ship:
+                        attack_report = "sunk"
+                        print("sunk")
+                        ship_sunk = True
+                    break
+        
             if hit_flag == False:
+                print("water")
                 attack_report = " Water"
                 #print(attack_report)
+
+        if ship_sunk == True:
+            client_socket.sendto(attack_report.encode(), (SERVER_IP, SERVER_PORT))
         else:
-            attack_report = "sunk"
+            client_socket.sendto(attack_report.encode(), (SERVER_IP, SERVER_PORT))
 
-        client_socket.sendto(attack_report.encode(), (SERVER_IP, SERVER_PORT))
+            time.sleep(0.001)
+            message = input(f"Player{player_number}:: ")
 
-        time.sleep(0.001)
-        message = input("Player0:: ")
+            if message.lower() == 'q':
+                break
 
-        if message.lower() == 'q':
-            break
-
-        client_socket.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
+            client_socket.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
 
 # Close the client socket
 client_socket.close()

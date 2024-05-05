@@ -29,7 +29,6 @@ try:
     subprocess.Popen(['/usr/bin/python3', 'player1.py'])
 
     for i in range(number_of_players-1):
-        time.sleep(0.01)
         subprocess.Popen(['/usr/bin/python3', 'players.py'])
 
     while True:
@@ -70,12 +69,10 @@ try:
                 highest_time = max(player_timeof_play)
                 highest_player_timeof_play = player_timeof_play.index(highest_time)
                 player_address = ingame_players[player_timeof_play.index(highest_time)]
-                print(player_timeof_play.index(highest_time))
-                print(player_address)
+                server_socket.sendto("11 shoot 11 11".encode(), player_address)
+                continue
 
-        response = ""
-        print(player_address)
-        server_socket.sendto(response.encode(), player_address)
+        server_socket.sendto("".encode(), player_address)
 
 except KeyboardInterrupt:
     print("Server stopped.")
