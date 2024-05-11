@@ -1,0 +1,36 @@
+import "hashes/sha256/sha256Padded";
+
+def main(private u8 [2] shot, private u8 [18][2] mut fleet, private u8 nonce, u32 [8] old_hash) -> u32 [8] {
+    u32[8] check_hash = sha256Padded(\
+    [fleet[0][0], fleet[0][1], fleet[1][0], fleet[1][1],\
+    fleet[2][0], fleet[2][1], fleet[3][0], fleet[3][1],\
+    fleet[4][0], fleet[4][1], fleet[5][0], fleet[5][1],\
+    fleet[6][0], fleet[6][1], fleet[7][0], fleet[7][1],\
+    fleet[8][0], fleet[8][1], fleet[9][0], fleet[9][1],\
+    fleet[10][0], fleet[10][1], fleet[11][0], fleet[11][1],\
+    fleet[12][0], fleet[12][1], fleet[13][0], fleet[13][1],\
+    fleet[14][0], fleet[14][1], fleet[15][0], fleet[15][1],\
+    fleet[16][0], fleet[16][1], fleet[17][0], fleet[17][1],\
+    nonce]);
+    assert(check_hash == old_hash);
+
+    for u32 i in 0..17 {
+        fleet[i] = \
+        if shot != fleet[i] {fleet[i]} else {[-1, -1]};
+    }
+    
+    u32 [8] hash = \
+    sha256Padded(\
+    [fleet[0][0], fleet[0][1], fleet[1][0], fleet[1][1],\
+    fleet[2][0], fleet[2][1], fleet[3][0], fleet[3][1],\
+    fleet[4][0], fleet[4][1], fleet[5][0], fleet[5][1],\
+    fleet[6][0], fleet[6][1], fleet[7][0], fleet[7][1],\
+    fleet[8][0], fleet[8][1], fleet[9][0], fleet[9][1],\
+    fleet[10][0], fleet[10][1], fleet[11][0], fleet[11][1],\
+    fleet[12][0], fleet[12][1], fleet[13][0], fleet[13][1],\
+    fleet[14][0], fleet[14][1], fleet[15][0], fleet[15][1],\
+    fleet[16][0], fleet[16][1], fleet[17][0], fleet[17][1],\
+    nonce]);
+
+    return hash;
+}
