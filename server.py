@@ -26,10 +26,10 @@ timeof_play = []
 try:
 
     # Start player0.py
-    subprocess.Popen(['/usr/bin/python3', 'player1.py'])
+    subprocess.Popen(['python', 'player1.py'])
 
     for i in range(number_of_players-1):
-        subprocess.Popen(['/usr/bin/python3', 'players.py'])
+        subprocess.Popen(['python', 'players.py'])
 
     while True:
         # Receive message from player
