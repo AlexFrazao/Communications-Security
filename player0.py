@@ -1,38 +1,39 @@
 import socket
 import time
-import os
-import subprocess
 import sys
+import subprocess
 
 # Define server IP and port
 SERVER_IP = '127.0.0.1'
 SERVER_PORT = 50000
 
 # Create UDP socket
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+player_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-# Send message to server
-client_socket.sendto("Ready".encode(), (SERVER_IP, SERVER_PORT)) # Send message to server
-player_number, server_address = client_socket.recvfrom(1024)
+player_socket.sendto("Ready".encode(), (SERVER_IP, SERVER_PORT)) # Send message to server
+player_number, server_address = player_socket.recvfrom(1024)
 player_number = player_number.decode()
+player_directory = f"player_{player_number}"
 
-directory = f"player_{player_number}"
-if not os.path.exists(directory):
-    os.makedirs(directory)
-
-file_path = os.path.join(directory, f"root{player_number}.zok")
-code = """
+player_zokcode = """
 def main(private field a, field b) {
     assert(a * a == b);
     return;
 } 
 """
-with open(file_path, 'w') as file:
-    file.write(code)
 
-subprocess.run(['zokrates', 'compile', '-i', f'root{player_number}.zok'], cwd=f"player_{player_number}")
-    
-""" board = [
+with open(f"{player_directory}/root{player_number}.zok", 'w') as file:
+    file.write(player_zokcode)
+subprocess.run(['zokrates', 'compile', '-i', f'root{player_number}.zok'], cwd=player_directory)
+subprocess.run(['zokrates', 'setup'], cwd=player_directory)
+subprocess.run(['zokrates', 'compute-witness', '-a', '337', '113569'], cwd=player_directory)
+subprocess.run(['zokrates', 'generate-proof'], cwd=player_directory)
+
+time.sleep(0.5)
+shot = input(f"Player{player_number}:: ")
+player_socket.sendto(shot.encode(), (SERVER_IP, SERVER_PORT))
+
+""" ships = [
 		[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)], # Carrier
 		[(0, 1), (1, 1), (2, 1), (3, 1)], # Battleship
 		[(0, 2), (1, 2), (2, 2)], # Destroyer
@@ -49,7 +50,7 @@ ships = [
 try:
     while True:
         # Get user input for message to send
-        response, server_address = client_socket.recvfrom(1024)
+        response, server_address = player_socket.recvfrom(1024)
 
         if response:
             response = response.decode().split()
@@ -82,9 +83,9 @@ try:
                     #print(attack_report)
 
             if ship_sunk == True:
-                client_socket.sendto(attack_report.encode(), (SERVER_IP, SERVER_PORT))
+                player_socket.sendto(attack_report.encode(), (SERVER_IP, SERVER_PORT))
             else:
-                client_socket.sendto(attack_report.encode(), (SERVER_IP, SERVER_PORT))
+                player_socket.sendto(attack_report.encode(), (SERVER_IP, SERVER_PORT))
 
                 time.sleep(0.001)
                 message = input(f"Player{player_number}:: ")
@@ -92,10 +93,11 @@ try:
                 if message.lower() == 'q':
                     break
 
-                client_socket.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
+                player_socket.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
 
     # Close the client socket
-    client_socket.close()
+    player_socket.close()
 
 except KeyboardInterrupt:
+    player_socket.close()
     sys.exit(0)

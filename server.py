@@ -2,18 +2,14 @@ import socket
 import sys
 import subprocess
 import time
+import os
 
 # Define server IP and port
 SERVER_IP = '127.0.0.1'
 SERVER_PORT = 50000
 
-# Create UDP socket
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-# Set SO_REUSEADDR option
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-# Bind socket to IP and port
 server_socket.bind((SERVER_IP, SERVER_PORT))
 
 print("Server started...")
@@ -23,10 +19,27 @@ number_of_players = int(input("Number of Players: "))
 ingame_players = []
 timeof_play = []
 
-try:
+server_directory = "server_"
+if not os.path.exists(server_directory):
+    os.makedirs(server_directory)
 
+server_zokcode = """
+def main(private field a, field b) {
+    assert(a * a == b);
+    return;
+} 
+"""
+
+with open(f"{server_directory}/server.zok", 'w') as file:
+    file.write(server_zokcode)
+subprocess.run(['zokrates', 'compile', '-i', f'server.zok'], cwd=server_directory)
+subprocess.run(['zokrates', 'setup'], cwd=server_directory)
+subprocess.run(['zokrates', 'compute-witness', '-a', '337', '113569'], cwd=server_directory)
+subprocess.run(['zokrates', 'generate-proof'], cwd=server_directory)
+
+try:
     # Start player0.py
-    subprocess.Popen(['python', 'player1.py'])
+    subprocess.Popen(['python', 'player0.py'])
 
     for i in range(number_of_players-1):
         subprocess.Popen(['python', 'players.py'])
@@ -39,17 +52,23 @@ try:
             ingame_players.append(player_address)
             player_number = ingame_players.index(player_address)
             print(f"Player {player_number} joined.")
+
+            player_directory = f"player_{player_number}"
+            if not os.path.exists(player_directory):
+                os.makedirs(player_directory)
+
             server_socket.sendto(bytes(str(player_number), 'utf-8'), player_address)
             timeof_play.append(time.time())
 
         player_message = data.decode().split()
         
         if len(player_message) >= 4 and player_message[0] == "shoot":
+            attacker = ingame_players.index(player_address)
             target_player_index = int(player_message[1])
             x_coordinate = player_message[2]
             y_coordinate = player_message[3]
 
-            print(f"Player {ingame_players.index(player_address)} shoots player {target_player_index} at ({x_coordinate}, {y_coordinate})")
+            print(f"Player {attacker} shoots player {target_player_index} at ({x_coordinate}, {y_coordinate})")
             
             if len(player_message) > 4:  # Check if attack_report is included
                 report = player_message[4]
@@ -61,6 +80,9 @@ try:
             
             attack_report, player_address = server_socket.recvfrom(1024)
             timeof_play[target_player_index] = time.time()
+
+            subprocess.run(['zokrates', 'export-verifier'], cwd=f'player_{target_player_index}')
+            subprocess.run(['zokrates', 'verify'], cwd=f'player_{target_player_index}')
 
             if (attack_report.decode() == "sunk"):
                 player_timeof_play = []
