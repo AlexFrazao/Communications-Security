@@ -1,5 +1,7 @@
 import socket
 import time
+import os
+import subprocess
 import sys
 
 # Define server IP and port
@@ -9,15 +11,28 @@ SERVER_PORT = 50000
 # Create UDP socket
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
+# Send message to server
 client_socket.sendto("Ready".encode(), (SERVER_IP, SERVER_PORT)) # Send message to server
 player_number, server_address = client_socket.recvfrom(1024)
 player_number = player_number.decode()
 
-time.sleep(0.1)
-shot = input(f"Player{player_number}:: ")
-client_socket.sendto(shot.encode(), (SERVER_IP, SERVER_PORT))
+directory = f"player_{player_number}"
+if not os.path.exists(directory):
+    os.makedirs(directory)
 
-""" ships = [
+file_path = os.path.join(directory, f"root{player_number}.zok")
+code = """
+def main(private field a, field b) {
+    assert(a * a == b);
+    return;
+} 
+"""
+with open(file_path, 'w') as file:
+    file.write(code)
+
+subprocess.run(['zokrates', 'compile', '-i', f'root{player_number}.zok'], cwd=f"player_{player_number}")
+    
+""" board = [
 		[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)], # Carrier
 		[(0, 1), (1, 1), (2, 1), (3, 1)], # Battleship
 		[(0, 2), (1, 2), (2, 2)], # Destroyer
