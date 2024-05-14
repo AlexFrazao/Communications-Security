@@ -29,7 +29,7 @@ subprocess.run(['zokrates', 'setup'], cwd=player_directory)
 subprocess.run(['zokrates', 'compute-witness', '-a', '337', '113569'], cwd=player_directory)
 subprocess.run(['zokrates', 'generate-proof'], cwd=player_directory)
 
-time.sleep(0.5)
+time.sleep(0.7)
 shot = input(f"Player{player_number}:: ")
 player_socket.sendto(shot.encode(), (SERVER_IP, SERVER_PORT))
 

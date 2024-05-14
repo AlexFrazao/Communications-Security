@@ -59,6 +59,9 @@ try:
 
             server_socket.sendto(bytes(str(player_number), 'utf-8'), player_address)
             timeof_play.append(time.time())
+            
+            subprocess.run(['zokrates', 'export-verifier'], cwd=server_directory)
+            subprocess.run(['zokrates', 'verify'], cwd=server_directory)
 
         player_message = data.decode().split()
         
@@ -80,9 +83,6 @@ try:
             
             attack_report, player_address = server_socket.recvfrom(1024)
             timeof_play[target_player_index] = time.time()
-
-            subprocess.run(['zokrates', 'export-verifier'], cwd=f'player_{target_player_index}')
-            subprocess.run(['zokrates', 'verify'], cwd=f'player_{target_player_index}')
 
             if (attack_report.decode() == "sunk"):
                 player_timeof_play = []
