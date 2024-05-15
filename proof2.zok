@@ -16,7 +16,7 @@ def main(private u8 [2] shot, private u8 [18][2] mut fleet, private u8 nonce, u3
 
     for u32 i in 0..17 {
         fleet[i] = \
-        if shot != fleet[i] {fleet[i]} else {[-1, -1]};
+        if shot != fleet[i] {fleet[i]} else {[11, 11]};
     }
     
     u32 [8] hash = \
