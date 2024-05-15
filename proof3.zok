@@ -1,0 +1,10 @@
+def main(private u8 [18][2] fleet) -> field {
+    field mut remaining = 18;
+    
+    for u32 i in 0..18 {
+        remaining = remaining - \
+        (fleet[i] == [11, 11] ? 1 : 0);
+    }
+    // assert(remaining > 0);
+    return remaining;
+}
