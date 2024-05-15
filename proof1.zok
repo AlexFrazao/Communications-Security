@@ -1,7 +1,7 @@
 import "hashes/sha256/sha256Padded";
 
 def main(private u8 [18][2] fleet, private u8 nonce) -> u32 [8] {
-    for u32 i in 0..17 {
+    for u32 i in 0..18 {
         bool out_of_bounds = \
         if fleet[i][0] < 0 || \
         fleet[i][0] > 9 || \
@@ -9,7 +9,7 @@ def main(private u8 [18][2] fleet, private u8 nonce) -> u32 [8] {
         fleet[i][1] > 9 {false} \
         else {true};
         assert(out_of_bounds);
-        for u32 j in 0..17 {
+        for u32 j in 0..18 {
             bool collision = \
             if fleet[i] == fleet[j] && \
             i != j {false} \
