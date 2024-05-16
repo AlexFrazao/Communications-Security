@@ -12,7 +12,6 @@ SERVER_PORT = 50000
 player_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 try:
-    # Send message to server
     player_socket.sendto("Ready".encode(), (SERVER_IP, SERVER_PORT)) # Send message to server
     player_number, server_address = player_socket.recvfrom(1024)
     player_number = player_number.decode()
@@ -25,12 +24,10 @@ try:
     } 
     """
 
-    with open(f"{player_directory}/root{player_number}.zok", 'w') as file:
+    """with open(f"{player_directory}/root{player_number}.zok", 'w') as file:
         file.write(player_zokcode)
-    subprocess.run(['zokrates', 'compile', '-i', f'root{player_number}.zok'], cwd=player_directory)
-    subprocess.run(['zokrates', 'setup'], cwd=player_directory)
     subprocess.run(['zokrates', 'compute-witness', '-a', '337', '113569'], cwd=player_directory)
-    subprocess.run(['zokrates', 'generate-proof'], cwd=player_directory)
+    subprocess.run(['zokrates', 'generate-proof'], cwd=player_directory) """
 
     """ ships = [
             [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)], # Carrier

@@ -15,27 +15,9 @@ server_socket.bind((SERVER_IP, SERVER_PORT))
 print("Server started...")
 number_of_players = int(input("Number of Players: "))
 
-# List to store addresses of players currently in the game
 ingame_players = []
 timeof_play = []
-
-server_directory = "server_"
-if not os.path.exists(server_directory):
-    os.makedirs(server_directory)
-
-server_zokcode = """
-def main(private field a, field b) {
-    assert(a * a == b);
-    return;
-} 
-"""
-
-with open(f"{server_directory}/server.zok", 'w') as file:
-    file.write(server_zokcode)
-subprocess.run(['zokrates', 'compile', '-i', f'server.zok'], cwd=server_directory)
-subprocess.run(['zokrates', 'setup'], cwd=server_directory)
-subprocess.run(['zokrates', 'compute-witness', '-a', '337', '113569'], cwd=server_directory)
-subprocess.run(['zokrates', 'generate-proof'], cwd=server_directory)
+third_party_created = False
 
 try:
     # Start player0.py
@@ -57,11 +39,16 @@ try:
             if not os.path.exists(player_directory):
                 os.makedirs(player_directory)
 
+        if third_party_created == False:
+            subprocess.Popen(['python', 'third_party.py'])
+            third_party_message, third_party_address = server_socket.recvfrom(1024)
+            third_party_created = True
+            print(third_party_message)
+            print(ingame_players)
+            """ server_socket.sendto(bytes(str(ingame_players), 'utf-8'), third_party_address) """
+
             server_socket.sendto(bytes(str(player_number), 'utf-8'), player_address)
             timeof_play.append(time.time())
-            
-            subprocess.run(['zokrates', 'export-verifier'], cwd=server_directory)
-            subprocess.run(['zokrates', 'verify'], cwd=server_directory)
 
         player_message = data.decode().split()
         

@@ -1,7 +1,7 @@
 import socket
 import time
-import sys
 import subprocess
+import sys
 
 # Define server IP and port
 SERVER_IP = '127.0.0.1'
@@ -22,12 +22,10 @@ def main(private field a, field b) {
 } 
 """
 
-with open(f"{player_directory}/root{player_number}.zok", 'w') as file:
+"""with open(f"{player_directory}/root{player_number}.zok", 'w') as file:
     file.write(player_zokcode)
-subprocess.run(['zokrates', 'compile', '-i', f'root{player_number}.zok'], cwd=player_directory)
-subprocess.run(['zokrates', 'setup'], cwd=player_directory)
 subprocess.run(['zokrates', 'compute-witness', '-a', '337', '113569'], cwd=player_directory)
-subprocess.run(['zokrates', 'generate-proof'], cwd=player_directory)
+subprocess.run(['zokrates', 'generate-proof'], cwd=player_directory) """
 
 time.sleep(0.7)
 shot = input(f"Player{player_number}:: ")
@@ -49,7 +47,6 @@ ships = [
 
 try:
     while True:
-        # Get user input for message to send
         response, server_address = player_socket.recvfrom(1024)
 
         if response:
