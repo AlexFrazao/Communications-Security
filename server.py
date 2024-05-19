@@ -20,7 +20,10 @@ timeof_play = []
 third_party_created = False
 
 try:
-    # Start player0.py
+    subprocess.Popen(['python', 'third_party.py'])
+    third_party_message, third_party_address = server_socket.recvfrom(1024)
+    print(third_party_message.decode())
+    
     subprocess.Popen(['python', 'player0.py'])
 
     for i in range(number_of_players-1):
@@ -39,15 +42,8 @@ try:
             if not os.path.exists(player_directory):
                 os.makedirs(player_directory)
 
-        if third_party_created == False:
-            subprocess.Popen(['python', 'third_party.py'])
-            third_party_message, third_party_address = server_socket.recvfrom(1024)
-            third_party_created = True
-            print(third_party_message)
-            print(ingame_players)
-            """ server_socket.sendto(bytes(str(ingame_players), 'utf-8'), third_party_address) """
-
             server_socket.sendto(bytes(str(player_number), 'utf-8'), player_address)
+            server_socket.sendto(bytes(str(player_number), 'utf-8'), third_party_address)
             timeof_play.append(time.time())
 
         player_message = data.decode().split()

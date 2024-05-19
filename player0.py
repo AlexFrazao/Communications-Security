@@ -2,6 +2,9 @@ import socket
 import time
 import subprocess
 import sys
+import json
+
+from proofs import proof_main
 
 # Define server IP and port
 SERVER_IP = '127.0.0.1'
@@ -15,31 +18,25 @@ player_number, server_address = player_socket.recvfrom(1024)
 player_number = player_number.decode()
 player_directory = f"player_{player_number}"
 
-player_zokcode = """
-def main(private field a, field b) {
-    assert(a * a == b);
-    return;
-} 
-"""
+# Request proof using the proof function
+proof_request = {
+    "proof_name": "proof1_zok"  # Specify which proof is needed
+}
+proof_result_str = proof_main(json.dumps(proof_request))
+proof_result = json.loads(proof_result_str)
 
-"""with open(f"{player_directory}/root{player_number}.zok", 'w') as file:
-    file.write(player_zokcode)
-subprocess.run(['zokrates', 'compute-witness', '-a', '337', '113569'], cwd=player_directory)
+# Example: write the proof to a file if successful
+if proof_result["status"] == "success":
+    proof_data = proof_result["proof"]
+    with open(f"{player_directory}/proof1.zok", 'w') as file:
+        file.write(proof_data)
+
+""" subprocess.run(['zokrates', 'compute-witness', '-a', '337', '113569'], cwd=player_directory)
 subprocess.run(['zokrates', 'generate-proof'], cwd=player_directory) """
 
 time.sleep(0.7)
 shot = input(f"Player{player_number}:: ")
 player_socket.sendto(shot.encode(), (SERVER_IP, SERVER_PORT))
-
-""" ships = [
-		[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)], # Carrier
-		[(0, 1), (1, 1), (2, 1), (3, 1)], # Battleship
-		[(0, 2), (1, 2), (2, 2)], # Destroyer
-		[(0, 3), (1, 3)], # Cruiser 1
-		[(0, 4), (1, 4)], # Cruiser 2
-		[(0, 5)], # Submarine 1
-		[(0, 6)], # Submarine 1
-	] """
 
 ships = [
 		[(0, 0)] # Submarine 1
