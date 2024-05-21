@@ -41,8 +41,10 @@ try:
             player_directory = f"player_{player_number}"
             if not os.path.exists(player_directory):
                 os.makedirs(player_directory)
+                for i in range(3):
+                    os.makedirs(f"{player_directory}/proof{i+1}")
 
-            server_socket.sendto(bytes(str(player_number), 'utf-8'), player_address)
+            server_socket.sendto(bytes(f"{player_number} {number_of_players}", 'utf-8'), player_address)
             server_socket.sendto(bytes(str(player_number), 'utf-8'), third_party_address)
             timeof_play.append(time.time())
 

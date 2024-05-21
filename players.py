@@ -1,8 +1,22 @@
 import socket
 import time
-import os
 import subprocess
 import sys
+import json
+
+from proofs import proof_main
+
+def write_proof_in_players_file(proof_number):
+    proof_request = {
+        "proof_name": f"proof{proof_number}_zok"
+    }
+    proof_result_str = proof_main(json.dumps(proof_request))
+    proof_result = json.loads(proof_result_str)
+
+    if proof_result["status"] == "success":
+        proof_data = proof_result["proof"]
+        with open(f"{player_directory}/proof{proof_number}/proof{proof_number}.zok", 'w') as file:
+            file.write(proof_data)
 
 # Define server IP and port
 SERVER_IP = '127.0.0.1'
@@ -13,31 +27,17 @@ player_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 try:
     player_socket.sendto("Ready".encode(), (SERVER_IP, SERVER_PORT)) # Send message to server
-    player_number, server_address = player_socket.recvfrom(1024)
-    player_number = player_number.decode()
-    player_directory = f"player_{player_number}"
+    players_information, server_address = player_socket.recvfrom(1024)
+    players_number = players_information.decode().split()
+    player_directory = f"player_{players_information[0]}"
 
-    player_zokcode = """
-    def main(private field a, field b) {
-        assert(a * a == b);
-        return;
-    } 
-    """
+    write_proof_in_players_file(1)
+    write_proof_in_players_file(2)
+    write_proof_in_players_file(3)
 
-    """with open(f"{player_directory}/root{player_number}.zok", 'w') as file:
-        file.write(player_zokcode)
-    subprocess.run(['zokrates', 'compute-witness', '-a', '337', '113569'], cwd=player_directory)
-    subprocess.run(['zokrates', 'generate-proof'], cwd=player_directory) """
-
-    """ ships = [
-            [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)], # Carrier
-            [(0, 1), (1, 1), (2, 1), (3, 1)], # Battleship
-            [(0, 2), (1, 2), (2, 2)], # Destroyer
-            [(0, 3), (1, 3)], # Cruiser 1
-            [(0, 4), (1, 4)], # Cruiser 2
-            [(0, 5)], # Submarine 1
-            [(0, 6)], # Submarine 1
-        ] """
+    time.sleep(int(players_information[1])*25)
+    subprocess.run(['zokrates', 'compute-witness', '-a', '0','0','1','0','2','0','3','0','4','0','0','1','1','1','2','1','3','1','0','2','1','2','2','2','0','3','1','3','0','4','1','4','0','5','0','6','5'], cwd=f"{player_directory}/proof1")
+    subprocess.run(['zokrates', 'generate-proof'], cwd=f"{player_directory}/proof1")
 
     ships = [
             [(0, 0)] # Submarine 1
@@ -92,6 +92,7 @@ try:
 
     # Close the client socket
     player_socket.close()
+    subprocess.run(['rm', '-r', 'player_*'], cwd=player_directory)
 
 except KeyboardInterrupt:
     player_socket.close()
