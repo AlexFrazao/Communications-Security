@@ -1,6 +1,7 @@
 import socket
 import os
 import subprocess
+import time
 
 def third_party_compile_proof(proof_number):
     subprocess.run(['zokrates', 'compile', '-i', f'proof{proof_number}.zok'], cwd=f"{players_directory}/proof{proof_number}")
@@ -24,5 +25,8 @@ while True:
     third_party_compile_proof(1)
     third_party_compile_proof(2)
     third_party_compile_proof(3)
-    
+
+    # signalize compilation of proof3 is done
+    subprocess.run(['touch', f'{players_directory}/proof3/done.txt'])
+
 third_party_socket.close()

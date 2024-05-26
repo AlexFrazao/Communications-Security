@@ -18,21 +18,28 @@ number_of_players = int(input("Number of Players: "))
 ingame_players = []
 timeof_play = []
 third_party_created = False
+files_setted = False
+
+def wait_for_player_witness_and_proof(player_directory):
+    proof_file = f'{player_directory}/proof1/done.txt'
+    while not os.path.exists(proof_file):
+        time.sleep(0.1)
+    subprocess.run(['rm', 'done.txt'], cwd=f'{player_directory}/proof1')
 
 try:
     subprocess.Popen(['python', 'third_party.py'])
     third_party_message, third_party_address = server_socket.recvfrom(1024)
     print(third_party_message.decode())
     
-    subprocess.Popen(['python', 'player0.py'])
+    subprocess.Popen(['python', 'players.py', '1'])
 
     for i in range(number_of_players-1):
-        subprocess.Popen(['python', 'players.py'])
+        subprocess.Popen(['python', 'players.py', '0'])
 
     while True:
-        # Receive message from player
+
         data, player_address = server_socket.recvfrom(1024)
-        # Checks if it's a new player
+
         if player_address not in ingame_players:
             ingame_players.append(player_address)
             player_number = ingame_players.index(player_address)
@@ -47,6 +54,10 @@ try:
             server_socket.sendto(bytes(f"{player_number} {number_of_players}", 'utf-8'), player_address)
             server_socket.sendto(bytes(str(player_number), 'utf-8'), third_party_address)
             timeof_play.append(time.time())
+
+        player_directory = f"player_{player_number}"
+        wait_for_player_witness_and_proof(player_directory)
+        subprocess.run(['zokrates', 'verify'], cwd=f'{player_directory}/proof1')
 
         player_message = data.decode().split()
         

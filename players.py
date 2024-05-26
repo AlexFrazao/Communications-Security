@@ -3,6 +3,7 @@ import time
 import subprocess
 import sys
 import json
+import os
 
 from proofs import proof_main
 
@@ -18,6 +19,17 @@ def write_proof_in_players_file(proof_number):
         with open(f"{player_directory}/proof{proof_number}/proof{proof_number}.zok", 'w') as file:
             file.write(proof_data)
 
+def wait_server_proof_verification(player_directory):
+    proof_file = f'{player_directory}/proof1/done.txt'
+    while not os.path.exists(proof_file):
+        time.sleep(0.1)
+
+def wait_for_third_party(player_directory):
+    proof_file = f'{player_directory}/proof3/done.txt'
+    while not os.path.exists(proof_file):
+        time.sleep(0.1)
+    subprocess.run(['rm', 'done.txt'], cwd=f'{player_directory}/proof3')
+
 # Define server IP and port
 SERVER_IP = '127.0.0.1'
 SERVER_PORT = 50000
@@ -25,46 +37,62 @@ SERVER_PORT = 50000
 # Create UDP socket
 player_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
+player_socket.sendto("Ready".encode(), (SERVER_IP, SERVER_PORT)) # Send message to server
+players_information, server_address = player_socket.recvfrom(1024)
+players_information = players_information.decode().split()
+player_number = players_information[0]
+number_of_players = players_information[1]
+last_player_directory=f'player_{int(number_of_players)-1}'
+
+player_directory = f"player_{player_number}"
+
+write_proof_in_players_file(1)
+write_proof_in_players_file(2)
+write_proof_in_players_file(3)
+
+fleet = [
+    [0, 0], [1, 0], [2, 0], [3, 0], [4, 0],
+    [0, 1], [1, 1], [2, 1], [3, 1],
+    [0, 2], [1, 2], [2, 2],
+    [0, 3], [1, 3],
+    [0, 4], [1, 4],
+    [0, 5],
+    [0, 6]
+]
+
+nonce = 5
+
+wait_for_third_party(player_directory)
+subprocess.run(['python', 'compute_witness.py', json.dumps(fleet), str(nonce), player_number])
+subprocess.run(['zokrates', 'generate-proof'], cwd=f'{player_directory}/proof1')
+subprocess.run(['touch', f'{player_directory}/proof1/done.txt'])    # signalize to server witness and proof have been generated
+
+if int(number_of_players) > 1:
+    wait_server_proof_verification(last_player_directory)
+
+is_first_player = len(sys.argv) > 1 and sys.argv[1] == '1'
+if is_first_player:
+    time.sleep(int(number_of_players) * 4)
+    shot = input(f"Player{player_number}:: ")
+    player_socket.sendto(shot.encode(), (SERVER_IP, SERVER_PORT))
+    subprocess.run(['rm', 'done.txt'], cwd=f'{player_directory}/proof1')
+
 try:
-    player_socket.sendto("Ready".encode(), (SERVER_IP, SERVER_PORT)) # Send message to server
-    players_information, server_address = player_socket.recvfrom(1024)
-    players_number = players_information.decode().split()
-    player_directory = f"player_{players_information[0]}"
-
-    write_proof_in_players_file(1)
-    write_proof_in_players_file(2)
-    write_proof_in_players_file(3)
-
-    time.sleep(int(players_information[1])*25)
-    subprocess.run(['zokrates', 'compute-witness', '-a', '0','0','1','0','2','0','3','0','4','0','0','1','1','1','2','1','3','1','0','2','1','2','2','2','0','3','1','3','0','4','1','4','0','5','0','6','5'], cwd=f"{player_directory}/proof1")
-    subprocess.run(['zokrates', 'generate-proof'], cwd=f"{player_directory}/proof1")
-
-    ships = [
-            [(0, 0)] # Submarine 1
-        ]
-
     while True:
-        # Get user input for message to send
         response, server_address = player_socket.recvfrom(1024)
 
         if response:
             response = response.decode().split()
-            # Receive response from server
-            #print(f"You received a shoot at ({response[2]}, {response[3]})")
             hit_flag = False
-            ship_sunk = False
-
+            ship_sunk = False                              
             hit_coordinates = (int(response[2]), int(response[3]))
-            # Check if a ship square was hitted
 
-            for ship in ships:
+            for ship in fleet:
                 for ship_coordinates in ship:
                     if hit_coordinates == ship_coordinates:
                         attack_report = " Hit"
                         print("Hit")
                         hit_flag = True
-                        #print(attack_report)
-                        # Remove the destroyed ship square from the coordinates
                         ship.remove(hit_coordinates)
                         if not ship:
                             attack_report = "sunk"
@@ -72,16 +100,13 @@ try:
                             ship_sunk = True
                         break
             
-                if hit_flag == False:
-                    print("water")
-                    attack_report = " Water"
-                    #print(attack_report)
+            if not hit_flag:
+                print("water")
+                attack_report = " Water"
 
-            if ship_sunk == True:
-                player_socket.sendto(attack_report.encode(), (SERVER_IP, SERVER_PORT))
-            else:
-                player_socket.sendto(attack_report.encode(), (SERVER_IP, SERVER_PORT))
+            player_socket.sendto(attack_report.encode(), (SERVER_IP, SERVER_PORT))
 
+            if not ship_sunk:
                 time.sleep(0.001)
                 message = input(f"Player{player_number}:: ")
 
@@ -90,7 +115,6 @@ try:
 
                 player_socket.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
 
-    # Close the client socket
     player_socket.close()
     subprocess.run(['rm', '-r', 'player_*'], cwd=player_directory)
 
