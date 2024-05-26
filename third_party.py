@@ -26,7 +26,7 @@ while True:
     third_party_compile_proof(2)
     third_party_compile_proof(3)
 
-    # signalize compilation of proof3 is done
     subprocess.run(['touch', f'{players_directory}/proof3/done.txt'])
+    print(f"\t\tthird party generated .txt in {players_directory}")
 
 third_party_socket.close()

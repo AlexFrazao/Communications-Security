@@ -4,6 +4,8 @@ import subprocess
 import time
 import os
 
+subprocess.run(['rm', '-r', 'player_*'])
+
 # Define server IP and port
 SERVER_IP = '127.0.0.1'
 SERVER_PORT = 50000
@@ -19,12 +21,15 @@ ingame_players = []
 timeof_play = []
 third_party_created = False
 files_setted = False
+number_of_proofs1_verified = 0
 
-def wait_for_player_witness_and_proof(player_directory):
-    proof_file = f'{player_directory}/proof1/done.txt'
+def wait_for_player_witness_and_proof(player_directory, proofs_number):
+    proof_file = f'{player_directory}/proof{proofs_number}/done.txt'
+    print(f"\t\tserver.py | waiting witness and proof of {player_directory}.")
     while not os.path.exists(proof_file):
         time.sleep(0.1)
-    subprocess.run(['rm', 'done.txt'], cwd=f'{player_directory}/proof1')
+    subprocess.run(['rm', 'done.txt'], cwd=f'{player_directory}/proof{proofs_number}')
+    print(f"\t\tserver.py | deleted {player_directory}/proof{proofs_number}/done.txt.")
 
 try:
     subprocess.Popen(['python', 'third_party.py'])
@@ -55,9 +60,14 @@ try:
             server_socket.sendto(bytes(str(player_number), 'utf-8'), third_party_address)
             timeof_play.append(time.time())
 
-        player_directory = f"player_{player_number}"
-        wait_for_player_witness_and_proof(player_directory)
-        subprocess.run(['zokrates', 'verify'], cwd=f'{player_directory}/proof1')
+        if number_of_players != number_of_proofs1_verified:
+            player_directory = f"player_{player_number}"
+            proof_number = 1
+            wait_for_player_witness_and_proof(player_directory, proof_number)
+            subprocess.run(['zokrates', 'verify'], cwd=f'{player_directory}/proof1')
+            subprocess.run(['touch', f'{player_directory}/proof1/done.txt'])
+            print(f"\t\tserver.py | finished verifying {player_directory}/proof1")
+            number_of_proofs1_verified += 1
 
         player_message = data.decode().split()
         
@@ -76,6 +86,13 @@ try:
             target_player_message = f"{target_player_index} {player_message[0]} {x_coordinate} {y_coordinate}"
             target_player_address = ingame_players[target_player_index]
             server_socket.sendto(target_player_message.encode(), target_player_address)
+
+            target_player_directory = f'player_{target_player_index}'
+            proof_number = 2
+            wait_for_player_witness_and_proof(target_player_directory, proof_number)
+            subprocess.run(['zokrates', 'verify'], cwd=f'{player_directory}/proof2')
+            subprocess.run(['touch', f'{player_directory}/proof{proof_number}/done.txt'])
+            print(f"\t\tserver.py | outside | finished verifying {player_directory}/proof{proof_number}")
             
             attack_report, player_address = server_socket.recvfrom(1024)
             timeof_play[target_player_index] = time.time()
