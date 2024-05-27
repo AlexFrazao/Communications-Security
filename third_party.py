@@ -21,7 +21,7 @@ third_party_socket.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
 while True:
     players_number, server_address = third_party_socket.recvfrom(1024)
     players_directory = f'player_{players_number.decode()}'
-    print(f"\t\tthird_party.py | perfoming compilations {players_directory}")
+    print(f"\t\t\t\tthird_party.py | perfoming compilations {players_directory}")
 
     third_party_compile_proof(1)
     third_party_compile_proof(2)
