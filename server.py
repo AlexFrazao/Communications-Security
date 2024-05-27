@@ -24,12 +24,14 @@ files_setted = False
 number_of_proofs1_verified = 0
 
 def wait_for_player_witness_and_proof(player_directory, proofs_number):
+    print(f"\t\t\t\tserver.py | waiting {player_directory}/proof{proofs_number}/done.txt.")
+
     proof_file = f'{player_directory}/proof{proofs_number}/done.txt'
-    print(f"\t\tserver.py | waiting witness and proof of {player_directory}.")
     while not os.path.exists(proof_file):
         time.sleep(0.1)
     subprocess.run(['rm', 'done.txt'], cwd=f'{player_directory}/proof{proofs_number}')
-    print(f"\t\tserver.py | deleted {player_directory}/proof{proofs_number}/done.txt.")
+
+    print(f"\t\t\t\tserver.py | deleted {player_directory}/proof{proofs_number}/done.txt.")
 
 try:
     subprocess.Popen(['python', 'third_party.py'])
@@ -66,7 +68,7 @@ try:
             wait_for_player_witness_and_proof(player_directory, proof_number)
             subprocess.run(['zokrates', 'verify'], cwd=f'{player_directory}/proof1')
             subprocess.run(['touch', f'{player_directory}/proof1/done.txt'])
-            print(f"\t\tserver.py | finished verifying {player_directory}/proof1")
+            print(f"\t\t\t\tserver.py | created {player_directory}/proof1/done.txt")
             number_of_proofs1_verified += 1
 
         player_message = data.decode().split()
@@ -90,13 +92,19 @@ try:
             target_player_directory = f'player_{target_player_index}'
             proof_number = 2
             wait_for_player_witness_and_proof(target_player_directory, proof_number)
-            subprocess.run(['zokrates', 'verify'], cwd=f'{player_directory}/proof2')
-            subprocess.run(['touch', f'{player_directory}/proof{proof_number}/done.txt'])
-            print(f"\t\tserver.py | outside | finished verifying {player_directory}/proof{proof_number}")
+            subprocess.run(['zokrates', 'verify'], cwd=f'{target_player_directory}/proof{proof_number}')
+            subprocess.run(['touch', f'{target_player_directory}/proof{proof_number}/done.txt'])
+            print(f"\t\t\t\tserver.py | created {target_player_directory}/proof{proof_number}/done.txt")
             
-            attack_report, player_address = server_socket.recvfrom(1024)
+            proof_number = 3
+            wait_for_player_witness_and_proof(target_player_directory, proof_number)
+            subprocess.run(['zokrates', 'verify'], cwd=f'{target_player_directory}/proof{proof_number}')
+            subprocess.run(['touch', f'{target_player_directory}/proof{proof_number}/done.txt'])
+            print(f"\t\t\t\tserver.py | created {target_player_directory}/proof{proof_number}/done.txt")
+            
+            """ attack_report, player_address = server_socket.recvfrom(1024)
             timeof_play[target_player_index] = time.time()
-
+            
             if (attack_report.decode() == "sunk"):
                 player_timeof_play = []
                 for last_play_time in timeof_play:
@@ -105,7 +113,7 @@ try:
                 highest_player_timeof_play = player_timeof_play.index(highest_time)
                 player_address = ingame_players[player_timeof_play.index(highest_time)]
                 server_socket.sendto("11 shoot 11 11".encode(), player_address)
-                continue
+                continue """
 
         server_socket.sendto("".encode(), player_address)
 

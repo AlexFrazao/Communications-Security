@@ -47,8 +47,7 @@ def create_input_for_proof3(fleet, player_number):
 
 def run_proof3(player_number):
     with open(f'player_{player_number}/proof3/input.json', 'r') as infile:
-        subprocess.Popen(['zokrates', 'compute-witness', '--abi', '--stdin'], stdin=infile)
-    time.sleep(2)
+        subprocess.run(['zokrates', 'compute-witness', '--abi', '--stdin'], stdin=infile, cwd=f'player_{player_number}/proof3')
 
 # Main function to route to the correct proof computation
 def main():

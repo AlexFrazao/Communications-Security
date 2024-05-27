@@ -19,21 +19,26 @@ def write_proof_in_players_file(proof_number):
         with open(f"{player_directory}/proof{proof_number}/proof{proof_number}.zok", 'w') as file:
             file.write(proof_data)
 
-def wait_server_proof_verification(player_directory, player_number, proof_number):
+def wait_server_proof_verification(player_directory, proof_number):
+    print(f"\t\t\t\tplayers.py | {player_directory} waiting server {player_directory}/proof{proof_number}/done.txt")
+    
     proof_file = f'{player_directory}/proof{proof_number}/done.txt'
-    print(f"\t\tplayers.py | {player_number} is waiting server proof verification.")
+    time.sleep(2)
     while not os.path.exists(proof_file):
         time.sleep(0.1)
     subprocess.run(['rm', 'done.txt'], cwd=f'{player_directory}/proof{proof_number}')
-    print(f"\t\tplayers.py | {player_directory} deleted {player_directory}/proof{proof_number}.txt")
+    
+    print(f"\t\t\t\tplayers.py | {player_directory} deleted {player_directory}/proof{proof_number}/done.txt")
 
 def wait_for_third_party(player_directory):
+    print(f"\t\t\t\tplayers.py | {player_directory} waiting third_party {player_directory}/proof3/done.txt")
+
     proof_file = f'{player_directory}/proof3/done.txt'
-    print(f"\t\tplayers.py | {player_directory} is waiting third_party compilation and set-up.")
     while not os.path.exists(proof_file):
         time.sleep(0.1)
     subprocess.run(['rm', 'done.txt'], cwd=f'{player_directory}/proof3')
-    print(f"\t\tplayers.py | {player_directory} deleted {player_directory}/proof3/.txt")
+    
+    print(f"\t\t\t\tplayers.py | {player_directory} deleted {player_directory}/proof3/done.txt")
 
 # Define server IP and port
 SERVER_IP = '127.0.0.1'
@@ -68,13 +73,14 @@ fleet = [
 nonce = 5
 
 wait_for_third_party(player_directory)
-subprocess.run(['python', 'compute_witness_from_proof.py', '1', json.dumps(fleet), str(nonce), player_number])
+subprocess.run(['python', 'compute_witness.py', '1', json.dumps(fleet), str(nonce), player_number])
 subprocess.run(['zokrates', 'generate-proof'], cwd=f'{player_directory}/proof1')
 subprocess.run(['touch', f'{player_directory}/proof1/done.txt'])    # signalize to server witness and proof have been generated
+print(f"\t\t\t\tplayers.py | created {player_directory}/proof1/done.txt")
 
 if int(number_of_players) > 1:
     proof_number = 1
-    wait_server_proof_verification(last_player_directory, player_number, proof_number)
+    wait_server_proof_verification(last_player_directory, proof_number)
 
 is_first_player = len(sys.argv) > 1 and sys.argv[1] == '1'
 if is_first_player:
@@ -82,6 +88,7 @@ if is_first_player:
     shot = input(f"Player{player_number}:: ")
     player_socket.sendto(shot.encode(), (SERVER_IP, SERVER_PORT))
     subprocess.run(['rm', 'done.txt'], cwd=f'{player_directory}/proof1')
+    print(f"\t\t\t\tplayers.py | deleted {player_directory}/proof1/done.txt")
 
 try:
     while True:
@@ -93,37 +100,20 @@ try:
             ship_sunk = False                              
             hit_coordinates = [int(response[2]), int(response[3])]
 
-            subprocess.run(['python', 'compute_witness_from_proof.py', '2', json.dumps(hit_coordinates), json.dumps(fleet), str(nonce), player_number])
-            subprocess.run(['zokrates', 'generate-proof'], cwd=f'{player_directory}/proof2')
-            subprocess.run(['touch', f'{player_directory}/proof2/done.txt'])
-            
             proof_number = 2
-            wait_server_proof_verification(player_directory, player_number, proof_number)
+            subprocess.run(['python', 'compute_witness.py', f'{proof_number}', json.dumps(hit_coordinates), json.dumps(fleet), str(nonce), player_number])
+            subprocess.run(['zokrates', 'generate-proof'], cwd=f'{player_directory}/proof{proof_number}')
+            subprocess.run(['touch', f'{player_directory}/proof{proof_number}/done.txt'])
+            print(f"\t\t\t\tplayers.py | created {player_directory}/proof{proof_number}/done.txt")
+            wait_server_proof_verification(player_directory, proof_number)
 
-            subprocess.run(['python', 'compute_witness_from_proof.py', '3', json.dumps(fleet), player_number])
-            subprocess.run(['zokrates', 'generate-proof'], cwd=f'{player_directory}/proof3')
-            subprocess.run(['touch', f'{player_directory}/proof3/done.txt'])
+            proof_number = 3
+            subprocess.run(['python', 'compute_witness.py', f'{proof_number}', json.dumps(fleet), player_number])
+            subprocess.run(['zokrates', 'generate-proof'], cwd=f'{player_directory}/proof{proof_number}')
+            subprocess.run(['touch', f'{player_directory}/proof{proof_number}/done.txt'])
+            print(f"\t\t\t\tplayers.py | created {player_directory}/proof{proof_number}/done.txt")
+            wait_server_proof_verification(player_directory, proof_number)
 
-            """ for ship in fleet:
-                for ship_coordinates in ship:
-                    if hit_coordinates == ship_coordinates:
-                        attack_report = " Hit"
-                        print("Hit")
-                        hit_flag = True
-                        ship.remove(hit_coordinates)
-                        if not ship:
-                            attack_report = "sunk"
-                            print("sunk")
-                            ship_sunk = True
-                        break
-            
-            if not hit_flag:
-                print("water")
-                attack_report = " Water"
-
-            player_socket.sendto(attack_report.encode(), (SERVER_IP, SERVER_PORT)) """
-
-            """ if not ship_sunk: """
             time.sleep(0.001)
             message = input(f"Player{player_number}:: ")
 

@@ -21,12 +21,13 @@ third_party_socket.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
 while True:
     players_number, server_address = third_party_socket.recvfrom(1024)
     players_directory = f'player_{players_number.decode()}'
+    print(f"\t\tthird_party.py | perfoming compilations {players_directory}")
 
     third_party_compile_proof(1)
     third_party_compile_proof(2)
     third_party_compile_proof(3)
 
     subprocess.run(['touch', f'{players_directory}/proof3/done.txt'])
-    print(f"\t\tthird party generated .txt in {players_directory}")
+    print(f"\t\tthird_party.py | generated .txt in {players_directory}")
 
 third_party_socket.close()
