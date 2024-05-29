@@ -44,7 +44,6 @@ try:
         subprocess.Popen(['python', 'players.py', '0'])
 
     while True:
-
         data, player_address = server_socket.recvfrom(1024)
 
         if player_address not in ingame_players:
@@ -102,7 +101,7 @@ try:
             subprocess.run(['touch', f'{target_player_directory}/proof{proof_number}/done.txt'])
             print(f"\t\t\t\tserver.py | created {target_player_directory}/proof{proof_number}/done.txt")
             
-            """ attack_report, player_address = server_socket.recvfrom(1024)
+            attack_report, player_address = server_socket.recvfrom(1024)
             timeof_play[target_player_index] = time.time()
             
             if (attack_report.decode() == "sunk"):
@@ -113,7 +112,7 @@ try:
                 highest_player_timeof_play = player_timeof_play.index(highest_time)
                 player_address = ingame_players[player_timeof_play.index(highest_time)]
                 server_socket.sendto("11 shoot 11 11".encode(), player_address)
-                continue """
+                continue
 
         server_socket.sendto("".encode(), player_address)
 

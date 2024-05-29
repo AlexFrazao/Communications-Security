@@ -7,6 +7,14 @@ import os
 
 from proofs import proof_main
 
+def set_hash_to_file(proof_number):
+    file = open(f"{player_directory}/proof{proof_number}/proof.json")
+    content = json.load(file)
+    file.close()
+
+    with open(f"{player_directory}/hash.json", 'w+') as output_file:
+        json.dump(content['inputs'], output_file)
+
 def write_proof_in_players_file(proof_number):
     proof_request = {
         "proof_name": f"proof{proof_number}_zok"
@@ -75,6 +83,7 @@ nonce = 5
 wait_for_third_party(player_directory)
 subprocess.run(['python', 'compute_witness.py', '1', json.dumps(fleet), str(nonce), player_number])
 subprocess.run(['zokrates', 'generate-proof'], cwd=f'{player_directory}/proof1')
+set_hash_to_file(proof_number=1)
 subprocess.run(['touch', f'{player_directory}/proof1/done.txt'])    # signalize to server witness and proof have been generated
 print(f"\t\t\t\tplayers.py | created {player_directory}/proof1/done.txt")
 
@@ -96,13 +105,13 @@ try:
 
         if response:
             response = response.decode().split()
-            hit_flag = False
-            ship_sunk = False                              
+            hit_flag = False                             
             hit_coordinates = [int(response[2]), int(response[3])]
-
+            print(fleet)
             proof_number = 2
             subprocess.run(['python', 'compute_witness.py', f'{proof_number}', json.dumps(hit_coordinates), json.dumps(fleet), str(nonce), player_number])
             subprocess.run(['zokrates', 'generate-proof'], cwd=f'{player_directory}/proof{proof_number}')
+            set_hash_to_file(proof_number=2)
             subprocess.run(['touch', f'{player_directory}/proof{proof_number}/done.txt'])
             print(f"\t\t\t\tplayers.py | created {player_directory}/proof{proof_number}/done.txt")
             wait_server_proof_verification(player_directory, proof_number)
@@ -113,6 +122,22 @@ try:
             subprocess.run(['touch', f'{player_directory}/proof{proof_number}/done.txt'])
             print(f"\t\t\t\tplayers.py | created {player_directory}/proof{proof_number}/done.txt")
             wait_server_proof_verification(player_directory, proof_number)
+
+            for i, ship_coordinates in enumerate(fleet):
+                if hit_coordinates == ship_coordinates:
+                    attack_report = "Hit"
+                    print(attack_report)
+                    hit_flag = True
+                    fleet[i] = [11, 11]
+                    break
+
+            if not hit_flag:
+                attack_report = "Water"
+                print(attack_report)
+            
+            print(fleet)
+
+            player_socket.sendto(attack_report.encode(), (SERVER_IP, SERVER_PORT))
 
             time.sleep(0.001)
             message = input(f"Player{player_number}:: ")

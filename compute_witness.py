@@ -17,6 +17,12 @@ def run_proof1(player_number):
     with open(f'player_{player_number}/proof1/input.json', 'r') as infile:
         subprocess.run(['zokrates', 'compute-witness', '--abi', '--stdin'], stdin=infile, cwd=f'player_{player_number}/proof1')
 
+def get_hash_from_file(player_number):
+    file = open(f"player_{player_number}/hash.json")
+    content = json.load(file)
+    file.close()
+    return content
+
 # Function to compute witness for proof2
 def create_input_for_proof2(shot, fleet, nonce, player_number):
     with open(f'player_{player_number}/proof1/proof.json') as file:
@@ -26,7 +32,7 @@ def create_input_for_proof2(shot, fleet, nonce, player_number):
         [str(number) for number in shot],
         [[str(number) for number in group] for group in fleet],
         str(nonce),
-        content['inputs']
+        get_hash_from_file(player_number)#content['inputs']
     ]
 
     with open(f'player_{player_number}/proof2/input.json', 'w+') as output_file:
