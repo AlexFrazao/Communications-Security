@@ -3,6 +3,7 @@ import subprocess
 import time
 import os
 import sys
+import json
 
 subprocess.run(['rm', '-r', 'player_*'])
 
@@ -20,8 +21,8 @@ ingame_players = []
 timeof_play = []
 third_party_created = False
 number_of_proofs1_verified = 0
-""" number_of_lobbys = 0
-lobby_list = [] """
+number_of_lobbys = 0
+lobby_list = []
 
 def wait_for_player_witness_and_proof(player_directory, proof_number):
     print(f"##server.py | waiting {player_directory}/proof{proof_number}/done.txt.")
@@ -37,7 +38,6 @@ try:
     subprocess.Popen(['python', 'third_party.py'])
     third_party_message, third_party_address = server_socket.recvfrom(1024)
     print(third_party_message.decode())
-    """ print(f"Number of Lobby's: {lobby_list.len()}") """
 
     while True:
         data, player_address = server_socket.recvfrom(1024)
@@ -46,25 +46,31 @@ try:
             ingame_players.append(player_address)
             player_number = ingame_players.index(player_address)
             print(f"Player {player_number} joined.")
-            """ player_create_or_join_lobby, player_address = server_socket.recvfrom(1024)
 
-            match player_create_or_join_lobby:
+            player_create_or_join_lobby, player_address = server_socket.recvfrom(1024)
+            match player_create_or_join_lobby.decode():
                 case "c":
-                    lobby_list.append(f"Lobby{lobby_list.len()}")
-                    print(f"Player {player_number} created Lobby{lobby_list.len()}.")
+                    lobby_directory = f'lobby{len(lobby_list)}'
+                    lobby_list.append(lobby_directory)
+                    print(f"Player {player_number} created {lobby_directory}")
+                    os.makedirs(lobby_directory)
                     continue
                 case "j":
-                    for i in len(lobby_list.len()):
-                        print(lobby_list[i])
+                    server_socket.sendto(json.dumps(lobby_list).encode(), player_address)
+                    print("5")
+                    lobby_number_to_join_player, player_address = server_socket.recvfrom(1024)
+                    print("6")
+                    lobby_directory = f'lobby{lobby_number_to_join_player}'
                     continue
                 case _:
-                    continue """
+                    print("nothing")
+                    continue
 
             player_directory = f"player_{player_number}"
-            if not os.path.exists(player_directory):
-                os.makedirs(player_directory)
+            if not os.path.exists(f'{lobby_directory}/{player_directory}'):
+                os.makedirs(f'{lobby_directory}/{player_directory}')
                 for i in range(3):
-                    os.makedirs(f"{player_directory}/proof{i+1}")
+                    os.makedirs(f'{lobby_directory}/{player_directory}/proof{i+1}')
 
             server_socket.sendto(bytes(f"{player_number} {len(ingame_players)}", 'utf-8'), player_address)
             server_socket.sendto(bytes(str(player_number), 'utf-8'), third_party_address)

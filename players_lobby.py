@@ -56,6 +56,33 @@ SERVER_PORT = 50000
 player_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 player_socket.sendto("Ready".encode(), (SERVER_IP, SERVER_PORT)) # Send message to server
+
+player_create_or_join_lobby = input("Create or join a lobby [C/J]?")
+while True:
+    print("1")
+    if player_create_or_join_lobby.lower() == "j":
+        player_socket.sendto(player_create_or_join_lobby.lower().encode(), (SERVER_IP, SERVER_PORT))
+        print("2")
+        lobby_list, server_address = player_socket.recvfrom(1024)
+        print("3")
+        lobby_list = json.loads(lobby_list.decode())
+        if len(lobby_list) != 0:
+            print("4")
+            for i in lobby_list:
+                print(lobby_list[i])
+            lobby_to_join_player = input("lobby number:")
+            player_socket.sendto(lobby_to_join_player.encode(), (SERVER_IP, SERVER_PORT))
+            break
+        else:
+            print("No lobbys available.")
+            create_or_join_lobby = input("Create a lobby [C]?")
+            player_socket.sendto(create_or_join_lobby.lower().encode(), (SERVER_IP, SERVER_PORT))
+            break
+    elif player_create_or_join_lobby.lower() == "c":
+        print("4")
+        break
+
+
 players_information, server_address = player_socket.recvfrom(1024)
 players_information = players_information.decode().split()
 player_number = players_information[0]
@@ -64,9 +91,6 @@ last_player_directory = f'player_{int(number_of_players) - 1}'
 
 player_directory = f"player_{player_number}"
 
-""" create_or_join_lobby = input("Create or join a lobby [C/J]?")
-player_socket.sendto(create_or_join_lobby.lower().encode(), (SERVER_IP, SERVER_PORT))
- """
 write_proof_in_players_file(1)
 write_proof_in_players_file(2)
 write_proof_in_players_file(3)
