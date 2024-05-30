@@ -28,25 +28,25 @@ def write_proof_in_players_file(proof_number):
             file.write(proof_data)
 
 def wait_server_proof_verification(player_directory, proof_number):
-    print(f"\t\t\t\tplayers.py | {player_directory} waiting server {player_directory}/proof{proof_number}/done.txt")
-    
+    print(f"##players.py | {player_directory} waiting server {player_directory}/proof{proof_number}/done.txt")
+
     proof_file = f'{player_directory}/proof{proof_number}/done.txt'
     time.sleep(2)
     while not os.path.exists(proof_file):
         time.sleep(0.1)
     subprocess.run(['rm', 'done.txt'], cwd=f'{player_directory}/proof{proof_number}')
-    
-    print(f"\t\t\t\tplayers.py | {player_directory} deleted {player_directory}/proof{proof_number}/done.txt")
+
+    print(f"##players.py | {player_directory} deleted {player_directory}/proof{proof_number}/done.txt")
 
 def wait_for_third_party(player_directory):
-    print(f"\t\t\t\tplayers.py | {player_directory} waiting third_party {player_directory}/proof3/done.txt")
+    print(f"##players.py | {player_directory} waiting third_party {player_directory}/proof3/done.txt")
 
     proof_file = f'{player_directory}/proof3/done.txt'
     while not os.path.exists(proof_file):
         time.sleep(0.1)
     subprocess.run(['rm', 'done.txt'], cwd=f'{player_directory}/proof3')
-    
-    print(f"\t\t\t\tplayers.py | {player_directory} deleted {player_directory}/proof3/done.txt")
+
+    print(f"##players.py | {player_directory} deleted {player_directory}/proof3/done.txt")
 
 # Define server IP and port
 SERVER_IP = '127.0.0.1'
@@ -60,10 +60,13 @@ players_information, server_address = player_socket.recvfrom(1024)
 players_information = players_information.decode().split()
 player_number = players_information[0]
 number_of_players = players_information[1]
-last_player_directory=f'player_{int(number_of_players)-1}'
+last_player_directory = f'player_{int(number_of_players) - 1}'
 
 player_directory = f"player_{player_number}"
 
+""" create_or_join_lobby = input("Create or join a lobby [C/J]?")
+player_socket.sendto(create_or_join_lobby.lower().encode(), (SERVER_IP, SERVER_PORT))
+ """
 write_proof_in_players_file(1)
 write_proof_in_players_file(2)
 write_proof_in_players_file(3)
@@ -84,29 +87,35 @@ wait_for_third_party(player_directory)
 subprocess.run(['python', 'compute_witness.py', '1', json.dumps(fleet), str(nonce), player_number])
 subprocess.run(['zokrates', 'generate-proof'], cwd=f'{player_directory}/proof1')
 set_hash_to_file(proof_number=1)
-subprocess.run(['touch', f'{player_directory}/proof1/done.txt'])    # signalize to server witness and proof have been generated
-print(f"\t\t\t\tplayers.py | created {player_directory}/proof1/done.txt")
+subprocess.run(['touch', f'{player_directory}/proof1/done.txt'])
 
-if int(number_of_players) > 1:
-    proof_number = 1
-    wait_server_proof_verification(last_player_directory, proof_number)
+wait_server_proof_verification(player_directory, proof_number=1)
 
-is_first_player = len(sys.argv) > 1 and sys.argv[1] == '1'
-if is_first_player:
-    time.sleep(int(number_of_players) * 4)
+if int(player_number) == 0:
     shot = input(f"Player{player_number}:: ")
     player_socket.sendto(shot.encode(), (SERVER_IP, SERVER_PORT))
     subprocess.run(['rm', 'done.txt'], cwd=f'{player_directory}/proof1')
     print(f"\t\t\t\tplayers.py | deleted {player_directory}/proof1/done.txt")
 
+initialization = True
+
 try:
     while True:
-        response, server_address = player_socket.recvfrom(1024)
+        data, server = player_socket.recvfrom(1024)
+        message = data.decode().split()
 
-        if response:
-            response = response.decode().split()
-            hit_flag = False                             
-            hit_coordinates = [int(response[2]), int(response[3])]
+        if len(message) == 0 and initialization == True:
+            player_socket.sendto("Ready".encode(), (SERVER_IP, SERVER_PORT))
+            initialization = False
+
+        elif message[1] == "shoot":
+            target_player_index = message[0]
+            x_coordinate = int(message[2])
+            y_coordinate = int(message[3])
+            hit_coordinates = [x_coordinate, y_coordinate]
+            
+            report = f"Player {player_number} shooting player {target_player_index} at ({x_coordinate}, {y_coordinate})"
+            print(report)
 
             proof_number = 2
             subprocess.run(['python', 'compute_witness.py', f'{proof_number}', json.dumps(hit_coordinates), json.dumps(fleet), str(nonce), player_number])
@@ -141,15 +150,11 @@ try:
 
             time.sleep(0.001)
             message = input(f"Player{player_number}:: ")
-
-            if message.lower() == 'q':
-                break
-
             player_socket.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
 
-    player_socket.close()
-    subprocess.run(['rm', '-r', 'player_*'], cwd=player_directory)
+        else:
+            print(message)
 
 except KeyboardInterrupt:
-    player_socket.close()
+    print("hello")
     sys.exit(0)
