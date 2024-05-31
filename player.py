@@ -91,6 +91,7 @@ fleet = [
 ]
 
 nonce = 5
+hit_flag = False
 
 wait_for_third_party(player_directory)
 subprocess.run(['python', 'compute_witness.py', '1', json.dumps(fleet), str(nonce), player_directory])
