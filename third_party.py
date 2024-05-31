@@ -4,8 +4,8 @@ import subprocess
 import time
 
 def third_party_compile_proof(proof_number):
-    subprocess.run(['zokrates', 'compile', '-i', f'proof{proof_number}.zok'], cwd=f"{players_directory}/proof{proof_number}")
-    subprocess.run(['zokrates', 'setup'], cwd=f"{players_directory}/proof{proof_number}")
+    subprocess.run(['zokrates', 'compile', '-i', f'proof{proof_number}.zok'], cwd=f"{player_directory}/proof{proof_number}")
+    subprocess.run(['zokrates', 'setup'], cwd=f"{player_directory}/proof{proof_number}")
 
 SERVER_IP = '127.0.0.1'
 SERVER_PORT = 50000
@@ -19,15 +19,15 @@ message = "Third Party created."
 third_party_socket.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
 
 while True:
-    players_number, server_address = third_party_socket.recvfrom(1024)
-    players_directory = f'player_{players_number.decode()}'
-    print(f"\t\t\t\tthird_party.py | perfoming compilations {players_directory}")
+    player_directory, server_address = third_party_socket.recvfrom(1024)
+    player_directory = player_directory.decode()
+    print(f"\t\t\t\tthird_party.py | perfoming compilations {player_directory}")
 
     third_party_compile_proof(1)
     third_party_compile_proof(2)
     third_party_compile_proof(3)
 
-    subprocess.run(['touch', f'{players_directory}/proof3/done.txt'])
-    print(f"\t\tthird_party.py | generated .txt in {players_directory}")
+    subprocess.run(['touch', f'{player_directory}/proof3/done.txt'])
+    print(f"\t\tthird_party.py | generated .txt in {player_directory}")
 
 third_party_socket.close()
