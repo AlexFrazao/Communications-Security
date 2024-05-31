@@ -170,8 +170,8 @@ try:
                 wait_server_proof_verification(player_directory, proof_number)
 
             elif "win_confrontation" in message:
-                message = input("Confront or not? [win/n]: ")
-                if message == "win":
+                message = input("Confront? [y/n]: ")
+                if message == "y":
                     player_socket.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
                 else:
                     continue
