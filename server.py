@@ -42,31 +42,34 @@ def timeout(seconds):
 
 @timeout(seconds=300) """
 def wait_for_challenge(win_stater_number, ingame_players, lobby_list):
+    executed = False 
     while True: 
-        server_socket.settimeout(30)
-        lobby_number = 0
+        if not executed:
+            server_socket.settimeout(30)
+            lobby_number = 0
 
-        for lobby in lobby_list:
-            print("1")
-            print(lobby_list, lobby)
-            for player_number in lobby:
-                print("2")
-                print(player_number, lobby)
-                if win_stater_number == player_number:
-                    print("3")
-                    print(win_stater_number, player_number)
-                    challenge_lobby_number = lobby_number
-                    print("lobby number:", lobby_number)
-                    for player_number in lobby:
-                        print("4")
-                        if win_stater_number == player_number:
-                            continue
-                        else:
-                            player_address = ingame_players[player_number]
-                            print(player_address)
-                            server_socket.sendto("win_confrontation".encode(), player_address)
-            lobby_number += 1
-        
+            for lobby in lobby_list:
+                print("1")
+                print(lobby_list, lobby)
+                for player_number in lobby:
+                    print("2")
+                    print(player_number, lobby)
+                    if win_stater_number == player_number:
+                        print("3")
+                        print(win_stater_number, player_number)
+                        challenge_lobby_number = lobby_number
+                        print("lobby number:", lobby_number)
+                        for player_number in lobby:
+                            print("4")
+                            if win_stater_number == player_number:
+                                continue
+                            else:
+                                player_address = ingame_players[player_number]
+                                print(player_address)
+                                server_socket.sendto("win_confrontation".encode(), player_address)
+                lobby_number += 1
+            executed = True
+
         data, player_address = server_socket.recvfrom(1024)
         player_message = data.decode().split()
 
